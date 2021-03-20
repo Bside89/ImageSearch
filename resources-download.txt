@@ -1,0 +1,5 @@
+Checkpoints yolov4-416
+https://drive.google.com/drive/folders/1qSpBs9HYGxP2N78CuKIY9pHjM6HrbDUD
+
+Video samples
+https://drive.google.com/drive/folders/1blvOlthdZX62j7SO84Y8lqJlbxOW_p-6
