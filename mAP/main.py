@@ -323,7 +323,7 @@ for txt_file in ground_truth_files_list:
       error_msg += " Expected: <class_name> <left> <top> <right> <bottom> ['difficult']\n"
       error_msg += " Received: " + line
       error_msg += "\n\nIf you have a <class_name> with spaces between words you should remove them\n"
-      error_msg += "by running the script \"remove_space.py\" or \"rename_class.py\" in the \"extra/\" folder."
+      error_msg += "by running the script \"remove_space.py\" or \"rename_class.py\" in the \"extra/\" output_folder."
       error(error_msg)
     # check if class is in the ignore list, if yes skip
     if class_name in args.ignore:
@@ -713,7 +713,7 @@ for class_name in pred_classes:
 #print(count_true_positives)
 
 """
- Plot the total number of occurences of each class in the "predicted" folder
+ Plot the total number of occurences of each class in the "predicted" output_folder
 """
 if draw_plot:
   window_title = "Predicted Objects Info"

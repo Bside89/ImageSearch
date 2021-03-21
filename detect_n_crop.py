@@ -16,10 +16,6 @@ import glob
 import os
 from os import path
 
-folder = 'output'
-
-if not (path.exists(folder)):
-    os.mkdir(folder)
 
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
@@ -27,22 +23,23 @@ flags.DEFINE_string('weights', './checkpoints/yolov4-416',
 flags.DEFINE_integer('size', 416, 'resize images to')
 flags.DEFINE_boolean('tiny', False, 'yolo or yolo-tiny')
 flags.DEFINE_string('model', 'yolov4', 'yolov3 or yolov4')
-flags.DEFINE_string('image', './data/kite.jpg', 'path to input image')
-flags.DEFINE_string('output', 'result.png', 'path to output image')
+flags.DEFINE_string('input', 'output/vid1-frames', 'Path to input images')
+flags.DEFINE_string('output', 'output/vid1-crop', 'Path to output images')
 flags.DEFINE_float('iou', 0.45, 'iou threshold')
 flags.DEFINE_float('score', 0.25, 'score threshold')
 
 
 def main(_argv):
-    lista = 0
-    input_path = 'video-frames'  # Mude para o diretório no seu pc contendo as imagens
     k = 0
     config = ConfigProto()
     config.gpu_options.allow_growth = True
     session = InteractiveSession(config=config)
     STRIDES, ANCHORS, NUM_CLASS, XYSCALE = utils.load_config(FLAGS)
     input_size = FLAGS.size
-    image_path = FLAGS.image
+    input_folder = FLAGS.input
+    output_folder = FLAGS.output
+    if not (path.exists(output_folder)):
+        os.mkdir(output_folder)
 
     if FLAGS.framework == 'tflite':
         interpreter = tf.lite.Interpreter(model_path=FLAGS.weights)
@@ -51,27 +48,21 @@ def main(_argv):
         output_details = interpreter.get_output_details()
         print(input_details)
         print(output_details)
-
     else:
         saved_model_loaded = tf.saved_model.load(FLAGS.weights, tags=[tag_constants.SERVING])
         infer = saved_model_loaded.signatures['serving_default']
 
-    images = glob.glob(input_path + '/*.jpg')
+    images_list = glob.glob(input_folder + '/*.jpg')
 
-    for j in range(len(images)):
-        print(j)
-
-        original_image = cv2.imread(input_path + '/frame'+str(j)+'.jpg')
-        
-        original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
-
-        # image_data = utils.image_preprocess(np.copy(original_image), [input_size, input_size])
+    for i in range(len(images_list)):
+        file_name = images_list[i].split('\\')[-1]  # Nome do arquivo
+        print('Processing: ' + file_name)
+        original_image = cv2.cvtColor(cv2.imread('{}/{}'.format(input_folder, file_name)), cv2.COLOR_BGR2RGB)
         image_data = cv2.resize(original_image, (input_size, input_size))
         image_data = image_data / 255.
-        # image_data = image_data[np.newaxis, ...].astype(np.float32)
 
         images_data = []
-        for i in range(1):
+        for j in range(1):
             images_data.append(image_data)
         images_data = np.asarray(images_data).astype(np.float32)
 
@@ -100,32 +91,23 @@ def main(_argv):
             score_threshold=FLAGS.score
         )
         pred_bbox = [boxes.numpy(), scores.numpy(), classes.numpy(), valid_detections.numpy()]
-        # variavel lista contem os bounding boxes dos objetos com a função modificada para remover veiculos repetidos...
+
+        # Variável lista contem os bounding boxes dos objetos com a função modificada para remover veículos repetidos...
         image, lista = utils.draw_bbox(original_image, pred_bbox)
         image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-        if (len(lista)>0):
+        if len(lista) > 0:
             for o in range(len(lista)):
                 aux = lista[o]
-                x,y = aux[0]
+                x, y = aux[0]
                 x = int(x)
                 y = int(y)
-                w,h = aux[1]
+                w, h = aux[1]
                 w = int(w)
                 h = int(h)
-                crop = image[y:h,x:w]
-                cv2.imwrite('output/'+str(k)+'.jpg',crop)
-                k+=1
+                crop = image[y:h, x:w]
+                cv2.imwrite('{}/{}.jpg'.format(output_folder, k), crop)
+                k += 1
 
-        # image = utils.draw_bbox(image_data*255, pred_bbox)
-        #image = Image.fromarray(image.astype(np.uint8))
-        #image.show()
-        
-        
-        # mude para o diretório no seu pc em que deseja salvar as imagens
-        #cv2.imwrite('output/'+str(j)+'.jpg', image)
-        
-        #cv2.imshow('result',image)
-        #cv2.waitKey(0)
 
 if __name__ == '__main__':
     try:

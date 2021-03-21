@@ -2,11 +2,11 @@ import sys
 import os
 import glob
 
-## This script ensures same number of files in ground-truth and predicted folder.
+## This script ensures same number of files in ground-truth and predicted output_folder.
 ## When you encounter file not found error, it's usually because you have
 ## mismatched numbers of ground-truth and predicted files.
 ## You can use this script to move ground-truth and predicted files that are
-## not in the intersection into a backup folder (backup_no_matches_found).
+## not in the intersection into a backup output_folder (backup_no_matches_found).
 ## This will retain only files that have the same name in both folders.
 
 # change directory to the one with the files to be changed
@@ -36,7 +36,7 @@ pred_backup = pred_files - gt_files
 
 
 def backup(src_folder, backup_files, backup_folder):
-    # non-intersection files (txt format) will be moved to a backup folder
+    # non-intersection files (txt format) will be moved to a backup output_folder
     if not backup_files:
         print('No backup required for', src_folder)
         return
