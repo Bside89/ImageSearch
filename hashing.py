@@ -1,49 +1,35 @@
-from imutils import paths
 import argparse
-import time
 import sys
 import cv2
-import os
+import pickle
+from imutils import paths
 
-
-def dhash(input_image, hash_size=8):
-    # Resize the input image, adding a single column (width) so we
-    # can compute the horizontal gradient
-    resized = cv2.resize(input_image, (hash_size + 1, hash_size))
-    # Compute the (relative) horizontal gradient between adjacent column pixels
-    diff = resized[:, 1:] > resized[:, :-1]
-    # Convert the difference image to a hash
-    return sum([2 ** i for (i, v) in enumerate(diff.flatten()) if v])
+# Local
+from hashutils import dhash
 
 
 # Construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-a", "--haystack", required=True,
-                help="Dataset of images to search through (i.e., the haystack)")
-ap.add_argument("-n", "--needles", required=True,
-                help="Set of images we are searching for (i.e., needles)")
+ap.add_argument("-a", "--path", required=True,
+                help="Dataset of images to search through.")
 args = vars(ap.parse_args())
 
-# Grab the paths to both the haystack and needle images
-print("[INFO] computing hashes for haystack...")
-haystackPaths = list(paths.list_images(args["haystack"]))
-needlePaths = list(paths.list_images(args["needles"]))
+# Grab the paths to images
+print("[INFO] computing hashes for images...")
+database_path = args["path"]
+images_paths = list(paths.list_images(database_path))
 
 # Remove the `\` character from any filenames containing a space
 # (assuming you're executing the code on a Unix machine)
 if sys.platform != "win32":
-    haystackPaths = [p.replace("\\", "") for p in haystackPaths]
-    needlePaths = [p.replace("\\", "") for p in needlePaths]
+    images_paths = [p.replace("\\", "") for p in images_paths]
 
-# Grab the base subdirectories for the needle paths, initialize the
-# dictionary that will map the image hash to corresponding image,
-# hashes, then start the timer
-BASE_PATHS = set([p.split(os.path.sep)[-2] for p in needlePaths])
-haystack = {}
-start = time.time()
+# Initialize the dictionary that will map the image hash to
+# corresponding image
+hash_dict = {}
 
-# Loop over the haystack paths
-for p in haystackPaths:
+# Loop over the images paths
+for p in images_paths:
     # Load the image from disk
     image = cv2.imread(p)
     # If the image is None then we could not load it from disk (so skip it)
@@ -51,42 +37,14 @@ for p in haystackPaths:
         continue
     # Convert the image to grayscale and compute the hash
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    imageHash = dhash(image)
-    # Update the haystack dictionary
-    haystackImages = haystack.get(imageHash, [])
-    haystackImages.append(p)
-    haystack[imageHash] = haystackImages
+    image_hash = dhash(image)
+    # Update the dictionary
+    list_images = hash_dict.get(image_hash, [])
+    list_images.append(p)
+    hash_dict[image_hash] = list_images
 
-# Show timing for hashing haystack images, then start computing the hashes for needle images
-print("[INFO] processed {} images in {:.2f} seconds".format(len(haystack), time.time() - start))
-print("[INFO] computing hashes for needles...")
-
-# Dictionary containing needle images and their correspondent haystack image path
-results = {}
-
-# Loop over the needle paths
-for p in needlePaths:
-    # Load the image from disk
-    image = cv2.imread(p)
-    # If the image is None then we could not load it from disk (so skip it)
-    if image is None:
-        continue
-    # Convert the image to grayscale and compute the hash
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    imageHash = dhash(image)
-    # Grab all image paths that match the hash
-    matchedPaths = haystack.get(imageHash, [])
-    # Save the results
-    results[p] = matchedPaths
-
-
-# Display results found
-print("[INFO] input images and their correspondents:")
-# Loop over each subdirectory and display it
-for key in results:
-    print('Image: {}'.format(key))
-    if len(results[key]) > 0:
-        for img in results[key]:
-            print('-> {}'.format(img))
-    else:
-        print('-> No similar images found.')
+# Save dictionary to database
+hash_filename = database_path + ".pkl"
+with open(hash_filename, "wb") as f:
+    pickle.dump(hash_dict, f)
+    print("Hash data saved to " + hash_filename)
