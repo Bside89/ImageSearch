@@ -4,7 +4,7 @@ import cv2
 from imutils import paths
 
 # Local
-from hashutils import dhash
+from islib.hashutils import dhash
 
 # Construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -17,7 +17,7 @@ args = vars(ap.parse_args())
 
 # Load hashes
 database_path = args["haystack"]
-with open(database_path + ".pkl", "rb") as f:
+with open(database_path + ".pickle", "rb") as f:
     hash_dict = pickle.load(f)
 
 # Grab the paths to both the haystack and needle images

@@ -3,6 +3,8 @@ import numpy as np
 
 
 def dhash(input_image, hash_size=8):
+    # convert the image to grayscale
+    # gray_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
     # Resize the input image, adding a single column (width) so we
     # can compute the horizontal gradient
     resized = cv2.resize(input_image, (hash_size + 1, hash_size))
