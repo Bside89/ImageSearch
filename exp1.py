@@ -128,17 +128,17 @@ plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
 plt.show()
 
 # Plot ROC Curve
-print("[INFO] Plotting ROC Curve...")
-rh1_score = [0 for _ in range(len(results_hashing1))]
-rr1_score = [0 for _ in range(len(results_resnet1))]
-rh1_fpr, rh1_tpr, _ = roc_curve(results_hashing1, rh1_score)
-rr1_fpr, rr1_tpr, _ = roc_curve(results_resnet1, rr1_score)
+#print("[INFO] Plotting ROC Curve...")
+#rh1_score = [0 for _ in range(len(results_hashing1))]
+#rr1_score = [0 for _ in range(len(results_resnet1))]
+#rh1_fpr, rh1_tpr, _ = roc_curve(results_hashing1, rh1_score)
+#rr1_fpr, rr1_tpr, _ = roc_curve(results_resnet1, rr1_score)
 
-plt.plot(rh1_fpr, rh1_tpr, linestyle='--', label='Hashing')
-plt.plot(rr1_fpr, rr1_tpr, marker='.', label='ResNet')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.legend()
-plt.show()
+#plt.plot(rh1_fpr, rh1_tpr, linestyle='--', label='Hashing')
+#plt.plot(rr1_fpr, rr1_tpr, marker='.', label='ResNet')
+#plt.xlabel('False Positive Rate')
+#plt.ylabel('True Positive Rate')
+#plt.legend()
+#plt.show()
 
 print("[INFO] Exiting...")
