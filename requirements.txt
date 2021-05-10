@@ -8,4 +8,4 @@ matplotlib
 pillow
 imutils
 vptree
-prettytable
+sklearn

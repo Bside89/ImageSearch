@@ -4,12 +4,15 @@ import cv2
 import numpy as np
 from imutils import paths
 import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
 
 from islib import perceptual_loss
 
-
 # Local
 from islib.hashutils import dhash, convert_hash, hamming
+
 
 # Construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -37,9 +40,6 @@ query_image = cv2.imread(args["query"])
 query_hash = convert_hash(dhash(query_image))
 query_image_resized = cv2.resize(query_image, (160, 160))
 
-# Initialize the dictionary that will map the image to corresponding hash
-hash_dict = {}
-
 # Results
 results1 = {'hashing': [], 'resnet': []}
 results2 = {'hashing': [], 'resnet': []}
@@ -58,33 +58,9 @@ for (i, p) in enumerate(images_paths1):
     # Computer perceptual loss (VGG)
     pred = cv2.resize(image, (160, 160))
     loss = perceptual_loss.perceptual(query_image_resized, pred)
-    # Update the dictionary
-    hash_dict[p] = {'hash': h, 'difference': diff}
     # Update results
     results1['hashing'].insert(len(results1['hashing']), diff)
     results1['resnet'].insert(len(results1['resnet']), loss.numpy())
-
-# Plot histogram (Hamming distance)
-print("[INFO] Folder #1: Plotting data...")
-results_hashing1 = np.array(results1['hashing'])
-results_hashing2 = np.array(results2['hashing'])
-bins = np.linspace(0, max(results_hashing1.max(), results_hashing2.max()), 20)
-plt.figure(1)
-n1, bins1, patches1 = plt.hist(x=results_hashing1, bins=bins, color='#05ffa1',
-                               alpha=0.5, rwidth=0.95, label='Mesmo carro',
-                               edgecolor='black', linewidth=1)
-n2, bins2, patches2 = plt.hist(x=results_hashing2, bins=bins, color='#f08472',
-                               alpha=0.5, rwidth=0.95, label='Carros diferentes',
-                               edgecolor='black', linewidth=1)
-plt.grid(axis='y', alpha=0.75)
-plt.xlabel('Distância Hamming')
-plt.ylabel('Nº de imagens')
-plt.legend(loc='upper right')
-plt.title('Experimento #1 - Utilizando Hashing e VPTree')
-plt.text(23, 45, r'$\mu=15, b=3$')
-maxfreq = max(n1.max(), n2.max())
-plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
-plt.show()
 
 # Loop over the images paths (second folder)
 for (i, p) in enumerate(images_paths2):
@@ -104,26 +80,65 @@ for (i, p) in enumerate(images_paths2):
     results2['hashing'].insert(len(results2['hashing']), diff)
     results2['resnet'].insert(len(results2['resnet']), loss.numpy())
 
+# Plot histogram (Hamming distance)
+print("[INFO] Folder #1: Plotting data...")
+results_hashing1 = np.array(results1['hashing'])
+results_hashing2 = np.array(results2['hashing'])
+bins = np.linspace(0, max(results_hashing1.max(), results_hashing2.max()), 20)
+plt.figure(1)
+n1, _, _ = plt.hist(x=results_hashing1, bins=bins, color='#05ffa1',
+                    alpha=0.5, rwidth=0.95, label='Mesmo carro',
+                    edgecolor='black', linewidth=1,
+                    weights=np.ones(len(results_hashing1)) / len(results_hashing1))
+n2, _, _ = plt.hist(x=results_hashing2, bins=bins, color='#f08472',
+                    alpha=0.5, rwidth=0.95, label='Carros diferentes',
+                    edgecolor='black', linewidth=1,
+                    weights=np.ones(len(results_hashing2)) / len(results_hashing2))
+plt.grid(axis='y', alpha=0.75)
+plt.xlabel('Distância Hamming')
+plt.ylabel('% Total de imagens')
+plt.legend(loc='upper right')
+plt.title('Experimento #1 - Utilizando Hashing e VPTree')
+plt.text(23, 45, r'$\mu=15, b=3$')
+maxfreq = max(n1.max(), n2.max())
+plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
+plt.show()
+
 # Plot histogram (Inception ResNet V2)
 print("[INFO] Folder #2: Plotting data...")
 results_resnet1 = np.array(results1['resnet'])
 results_resnet2 = np.array(results2['resnet'])
 bins = np.linspace(0, max(results_resnet1.max(), results_resnet2.max()), 20)
 plt.figure(2)
-n1, bins1, patches1 = plt.hist(x=results_resnet1, bins=bins, color='#05ffa1',
-                               alpha=0.5, rwidth=0.95, label='Mesmo carro',
-                               edgecolor='black', linewidth=1)
-n2, bins2, patches2 = plt.hist(x=results_resnet2, bins=bins, color='#f08472',
-                               alpha=0.5, rwidth=0.95, label='Carros diferentes',
-                               edgecolor='black', linewidth=1)
+n1, _, _ = plt.hist(x=results_resnet1, bins=bins, color='#05ffa1',
+                    alpha=0.5, rwidth=0.95, label='Mesmo carro',
+                    edgecolor='black', linewidth=1,
+                    weights=np.ones(len(results_resnet1)) / len(results_resnet1))
+n2, _, _ = plt.hist(x=results_resnet2, bins=bins, color='#f08472',
+                    alpha=0.5, rwidth=0.95, label='Carros diferentes',
+                    edgecolor='black', linewidth=1,
+                    weights=np.ones(len(results_resnet2)) / len(results_resnet2))
 plt.grid(axis='y', alpha=0.75)
 plt.xlabel('Erro')
-plt.ylabel('Nº de imagens')
+plt.ylabel('% Total de imagens')
 plt.legend(loc='upper right')
 plt.title('Experimento #1 - Utilizando Inception ResNet V2')
 plt.text(23, 45, r'$\mu=15, b=3$')
-maxfreq = max(n1.max(), n2.max())
-plt.ylim(ymax=np.ceil(maxfreq / 10) * 10 if maxfreq % 10 else maxfreq + 10)
+plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
+plt.show()
+
+# Plot ROC Curve
+print("[INFO] Plotting ROC Curve...")
+rh1_score = [0 for _ in range(len(results_hashing1))]
+rr1_score = [0 for _ in range(len(results_resnet1))]
+rh1_fpr, rh1_tpr, _ = roc_curve(results_hashing1, rh1_score)
+rr1_fpr, rr1_tpr, _ = roc_curve(results_resnet1, rr1_score)
+
+plt.plot(rh1_fpr, rh1_tpr, linestyle='--', label='Hashing')
+plt.plot(rr1_fpr, rr1_tpr, marker='.', label='ResNet')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
 plt.show()
 
 print("[INFO] Exiting...")
