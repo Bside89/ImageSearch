@@ -87,18 +87,18 @@ results_hashing2 = np.array(results2['hashing'])
 bins = np.linspace(0, max(results_hashing1.max(), results_hashing2.max()), 20)
 plt.figure(1)
 n1, _, _ = plt.hist(x=results_hashing1, bins=bins, color='#05ffa1',
-                    alpha=0.5, rwidth=0.95, label='Mesmo carro',
+                    alpha=0.5, rwidth=0.95, label='Mesmo carro, cores diferentes',
                     edgecolor='black', linewidth=1,
                     weights=np.ones(len(results_hashing1)) / len(results_hashing1))
 n2, _, _ = plt.hist(x=results_hashing2, bins=bins, color='#f08472',
-                    alpha=0.5, rwidth=0.95, label='Carros diferentes',
+                    alpha=0.5, rwidth=0.95, label='Mesma cor, carros diferentes',
                     edgecolor='black', linewidth=1,
                     weights=np.ones(len(results_hashing2)) / len(results_hashing2))
 plt.grid(axis='y', alpha=0.75)
 plt.xlabel('Distância Hamming')
 plt.ylabel('% Total de imagens')
-plt.legend(loc='upper right')
-plt.title('Experimento #1 - Utilizando dHash')
+plt.legend(loc='upper left')
+plt.title('Experimento #3 - Utilizando dHash')
 plt.text(23, 45, r'$\mu=15, b=3$')
 maxfreq = max(n1.max(), n2.max())
 plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
@@ -111,34 +111,20 @@ results_resnet2 = np.array(results2['resnet'])
 bins = np.linspace(0, max(results_resnet1.max(), results_resnet2.max()), 20)
 plt.figure(2)
 n1, _, _ = plt.hist(x=results_resnet1, bins=bins, color='#05ffa1',
-                    alpha=0.5, rwidth=0.95, label='Mesmo carro',
+                    alpha=0.5, rwidth=0.95, label='Mesmo carro, cores diferentes',
                     edgecolor='black', linewidth=1,
                     weights=np.ones(len(results_resnet1)) / len(results_resnet1))
 n2, _, _ = plt.hist(x=results_resnet2, bins=bins, color='#f08472',
-                    alpha=0.5, rwidth=0.95, label='Carros diferentes',
+                    alpha=0.5, rwidth=0.95, label='Mesma cor, carros diferentes',
                     edgecolor='black', linewidth=1,
                     weights=np.ones(len(results_resnet2)) / len(results_resnet2))
 plt.grid(axis='y', alpha=0.75)
 plt.xlabel('Erro')
 plt.ylabel('% Total de imagens')
 plt.legend(loc='upper right')
-plt.title('Experimento #1 - Utilizando Inception ResNet V2')
+plt.title('Experimento #3 - Utilizando Inception ResNet V2')
 plt.text(23, 45, r'$\mu=15, b=3$')
 plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
 plt.show()
-
-# Plot ROC Curve
-#print("[INFO] Plotting ROC Curve...")
-#rh1_score = [0 for _ in range(len(results_hashing1))]
-#rr1_score = [0 for _ in range(len(results_resnet1))]
-#rh1_fpr, rh1_tpr, _ = roc_curve(results_hashing1, rh1_score)
-#rr1_fpr, rr1_tpr, _ = roc_curve(results_resnet1, rr1_score)
-
-#plt.plot(rh1_fpr, rh1_tpr, linestyle='--', label='Hashing')
-#plt.plot(rr1_fpr, rr1_tpr, marker='.', label='ResNet')
-#plt.xlabel('False Positive Rate')
-#plt.ylabel('True Positive Rate')
-#plt.legend()
-#plt.show()
 
 print("[INFO] Exiting...")
